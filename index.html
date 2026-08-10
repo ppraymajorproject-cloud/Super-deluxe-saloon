@@ -123,18 +123,20 @@
     position:absolute; left:14px; right:14px;
     bottom:calc(16px + env(safe-area-inset-bottom));
     z-index:25;
-    background:linear-gradient(90deg, rgba(60,30,20,0.9), rgba(20,12,8,0.88));
-    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.2);
     border-radius:999px;
     padding:8px 16px 8px 8px;
     display:flex; align-items:center; gap:12px;
-    backdrop-filter:blur(10px);
-    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 8px 24px rgba(0,0,0,0.3);
   }
   .thumb{
     width:52px; height:52px; border-radius:50%;
     background:#222 center/cover no-repeat;
     flex-shrink:0;
+    box-shadow:0 2px 8px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.25);
     border:1px solid rgba(255,255,255,0.15);
     animation:spin 12s linear infinite;
     animation-play-state:paused;
@@ -163,7 +165,8 @@
   .ctrlbtn svg{width:16px; height:16px;}
   .playbtn{
     width:40px; height:40px; border-radius:50%;
-    background:var(--cream); color:var(--brick-deep);
+    background:rgba(255,255,255,0.85);
+    color:var(--brick-deep);
   }
   .playbtn svg{width:18px; height:18px;}
 
