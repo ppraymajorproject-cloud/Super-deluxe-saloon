@@ -118,43 +118,6 @@
     color:var(--amber); opacity:.9;
   }
 
-  /* ---------- Side panel toggle ---------- */
-  .panel-toggle{
-    position:absolute; top:50%; right:0; transform:translateY(-50%);
-    width:26px; height:64px;
-    background:var(--panel); backdrop-filter:blur(6px);
-    border-radius:14px 0 0 14px;
-    display:flex; align-items:center; justify-content:center;
-    color:var(--cream); border:none; cursor:pointer;
-    z-index:20;
-  }
-  .side-panel{
-    position:absolute; top:0; right:0; bottom:0;
-    width:78%; max-width:320px;
-    background:rgba(12,8,6,0.92);
-    backdrop-filter:blur(10px);
-    transform:translateX(100%);
-    transition:transform .35s cubic-bezier(.2,.8,.2,1);
-    z-index:30;
-    padding:70px 22px 22px;
-    overflow-y:auto;
-  }
-  .side-panel.open{transform:translateX(0);}
-  .side-panel h3{
-    font-family:'Baloo 2',sans-serif; font-size:14px; letter-spacing:2px;
-    text-transform:uppercase; color:var(--amber); margin:0 0 12px;
-  }
-  .queue-item{
-    padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.08);
-    font-size:13px; opacity:.85;
-  }
-  .queue-item.active{color:var(--amber); opacity:1; font-weight:600;}
-  .close-panel{
-    position:absolute; top:18px; right:18px;
-    background:none; border:none; color:var(--cream);
-    font-size:22px; cursor:pointer;
-  }
-
   /* ---------- Player bar ---------- */
   .player{
     position:absolute; left:14px; right:14px;
@@ -237,16 +200,6 @@
 
   <div class="status-msg" id="status-msg"></div>
 
-  <button class="panel-toggle" id="panel-toggle" aria-label="Open queue">
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-  </button>
-
-  <div class="side-panel" id="side-panel">
-    <button class="close-panel" id="close-panel">&times;</button>
-    <h3>Now Playing Queue</h3>
-    <div id="queue-list"><div class="queue-item">Loading playlist…</div></div>
-  </div>
-
   <div class="player">
     <div class="thumb" id="thumb"></div>
     <div class="meta">
@@ -282,6 +235,11 @@
    ========================================================= */
 const PLAYLIST_ID = "PLDfWs4LxMSoI";
 
+/* Upstash Redis REST credentials — get these from your Upstash console
+   (Database > REST API section). Free tier is plenty for this. */
+const UPSTASH_URL   = "REPLACE_WITH_YOUR_UPSTASH_REST_URL";   // e.g. https://us1-xxxx.upstash.io
+const UPSTASH_TOKEN = "REPLACE_WITH_YOUR_UPSTASH_REST_TOKEN";
+
 /* ---------------- Clock ---------------- */
 function tickClock(){
   const d = new Date();
@@ -293,34 +251,45 @@ function tickClock(){
 }
 tickClock(); setInterval(tickClock, 15000);
 
-/* ---------------- Live presence (shared persistent storage) ---------------- */
+/* ---------------- Live presence (Upstash Redis heartbeat) ---------------- */
 const CLIENT_ID = 'c_' + Math.random().toString(36).slice(2, 10);
-const PRESENCE_KEY = 'presence-doc';
+const PRESENCE_ZSET = 'saloon:presence';
 const STALE_MS = 40000;
 
+async function upstashPipeline(commands){
+  const res = await fetch(`${UPSTASH_URL}/pipeline`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${UPSTASH_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(commands)
+  });
+  if(!res.ok) throw new Error('Upstash request failed');
+  return res.json();
+}
+
 async function heartbeat(){
+  if(UPSTASH_URL.startsWith('REPLACE') || UPSTASH_TOKEN.startsWith('REPLACE')){
+    document.getElementById('online-count').textContent = '1';
+    return;
+  }
   try{
-    let doc = {};
-    try{
-      const res = await window.storage.get(PRESENCE_KEY, true);
-      if(res && res.value) doc = JSON.parse(res.value);
-    }catch(e){ doc = {}; }
     const now = Date.now();
-    doc[CLIENT_ID] = now;
-    for(const id in doc){ if(now - doc[id] > STALE_MS) delete doc[id]; }
-    await window.storage.set(PRESENCE_KEY, JSON.stringify(doc), true);
-    document.getElementById('online-count').textContent = Object.keys(doc).length;
+    const results = await upstashPipeline([
+      ['ZADD', PRESENCE_ZSET, now.toString(), CLIENT_ID],
+      ['ZREMRANGEBYSCORE', PRESENCE_ZSET, '-inf', (now - STALE_MS).toString()],
+      ['ZCARD', PRESENCE_ZSET]
+    ]);
+    const count = results && results[2] && typeof results[2].result === 'number'
+      ? results[2].result : 1;
+    document.getElementById('online-count').textContent = count;
   }catch(e){
     document.getElementById('online-count').textContent = '1';
   }
 }
 heartbeat();
 setInterval(heartbeat, 12000);
-
-/* ---------------- Side panel ---------------- */
-const sidePanel = document.getElementById('side-panel');
-document.getElementById('panel-toggle').onclick = () => sidePanel.classList.add('open');
-document.getElementById('close-panel').onclick = () => sidePanel.classList.remove('open');
 
 /* ---------------- YouTube IFrame Player ---------------- */
 let ytPlayer, isPlaying = false, progressTimer;
