@@ -140,7 +140,10 @@
     border:1px solid rgba(255,255,255,0.15);
     animation:spin 12s linear infinite;
     animation-play-state:paused;
+    transition:transform .12s ease;
+    cursor:pointer;
   }
+  .thumb:active{ transform:scale(0.92); }
   .thumb.playing{animation-play-state:running;}
   @keyframes spin{from{transform:rotate(0)} to{transform:rotate(360deg)}}
   .meta{flex:1; min-width:0;}
@@ -150,9 +153,12 @@
   .progress-track{
     flex:1; height:3px; border-radius:2px; background:rgba(255,255,255,0.18);
     position:relative; cursor:pointer;
+    padding:8px 0;
+    margin:-8px 0;
+    background-clip:content-box;
   }
   .progress-fill{
-    position:absolute; left:0; top:0; bottom:0; width:0%;
+    position:absolute; left:0; top:8px; bottom:8px; width:0%;
     background:var(--amber); border-radius:2px;
   }
   .time{font-size:10px; opacity:.6; font-variant-numeric:tabular-nums;}
@@ -160,13 +166,24 @@
   .ctrlbtn{
     background:none; border:none; color:var(--cream); cursor:pointer;
     display:flex; align-items:center; justify-content:center;
-    padding:6px;
+    padding:6px; border-radius:50%;
+    transition:transform .12s ease, background-color .12s ease, opacity .12s ease;
+  }
+  .ctrlbtn:active{
+    transform:scale(0.82);
+    background-color:rgba(255,255,255,0.15);
+    opacity:.75;
   }
   .ctrlbtn svg{width:16px; height:16px;}
   .playbtn{
     width:40px; height:40px; border-radius:50%;
     background:rgba(255,255,255,0.85);
     color:var(--brick-deep);
+    transition:transform .12s ease, background-color .12s ease;
+  }
+  .playbtn:active{
+    transform:scale(0.86);
+    background-color:rgba(255,255,255,0.65);
   }
   .playbtn svg{width:18px; height:18px;}
 
@@ -394,6 +411,7 @@ document.getElementById('play-btn').onclick = () => {
 };
 document.getElementById('next-btn').onclick = () => ytPlayer && ytPlayer.nextVideo();
 document.getElementById('prev-btn').onclick = () => ytPlayer && ytPlayer.previousVideo();
+document.getElementById('thumb').onclick = () => document.getElementById('play-btn').click();
 
 document.getElementById('progress-track').onclick = (e) => {
   if(!ytPlayer || !ytPlayer.getDuration) return;
