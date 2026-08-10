@@ -93,6 +93,11 @@
     background:var(--panel); backdrop-filter:blur(6px);
     display:flex; align-items:center; justify-content:center;
     border:none; color:var(--cream); cursor:pointer;
+    transition:transform .12s ease, background-color .12s ease;
+  }
+  .iconbtn:active, .iconbtn.pressed{
+    transform:scale(0.85);
+    background-color:rgba(255,255,255,0.15);
   }
   .iconbtn svg{width:18px; height:18px;}
 
@@ -143,7 +148,7 @@
     transition:transform .12s ease;
     cursor:pointer;
   }
-  .thumb:active{ transform:scale(0.92); }
+  .thumb:active, .thumb.pressed{ transform:scale(0.92); }
   .thumb.playing{animation-play-state:running;}
   @keyframes spin{from{transform:rotate(0)} to{transform:rotate(360deg)}}
   .meta{flex:1; min-width:0;}
@@ -156,6 +161,10 @@
     padding:8px 0;
     margin:-8px 0;
     background-clip:content-box;
+    transition:background-color .12s ease;
+  }
+  .progress-track:active, .progress-track.pressed{
+    background-color:rgba(255,255,255,0.32);
   }
   .progress-fill{
     position:absolute; left:0; top:8px; bottom:8px; width:0%;
@@ -169,7 +178,7 @@
     padding:6px; border-radius:50%;
     transition:transform .12s ease, background-color .12s ease, opacity .12s ease;
   }
-  .ctrlbtn:active{
+  .ctrlbtn:active, .ctrlbtn.pressed{
     transform:scale(0.82);
     background-color:rgba(255,255,255,0.15);
     opacity:.75;
@@ -181,7 +190,7 @@
     color:var(--brick-deep);
     transition:transform .12s ease, background-color .12s ease;
   }
-  .playbtn:active{
+  .playbtn:active, .playbtn.pressed{
     transform:scale(0.86);
     background-color:rgba(255,255,255,0.65);
   }
@@ -412,6 +421,19 @@ document.getElementById('play-btn').onclick = () => {
 document.getElementById('next-btn').onclick = () => ytPlayer && ytPlayer.nextVideo();
 document.getElementById('prev-btn').onclick = () => ytPlayer && ytPlayer.previousVideo();
 document.getElementById('thumb').onclick = () => document.getElementById('play-btn').click();
+
+/* ---------------- Reliable touch feedback (CSS :active is flaky on iOS) ---------------- */
+(function(){
+  const targets = document.querySelectorAll('.iconbtn, .ctrlbtn, .thumb, .progress-track');
+  targets.forEach(el => {
+    const press = () => el.classList.add('pressed');
+    const release = () => el.classList.remove('pressed');
+    el.addEventListener('pointerdown', press);
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    el.addEventListener('pointerleave', release);
+  });
+})();
 
 document.getElementById('progress-track').onclick = (e) => {
   if(!ytPlayer || !ytPlayer.getDuration) return;
