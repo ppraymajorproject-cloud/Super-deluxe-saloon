@@ -163,6 +163,7 @@
     background-clip:content-box;
     box-sizing:content-box;
     transition:background-color .12s ease;
+    touch-action:none;
   }
   .progress-track:active, .progress-track.pressed{
     background-color:rgba(255,255,255,0.32);
@@ -170,6 +171,19 @@
   .progress-fill{
     position:absolute; left:0; top:8px; bottom:8px; width:0%;
     background:var(--amber); border-radius:2px;
+  }
+  .progress-handle{
+    position:absolute; top:50%; left:0%;
+    width:13px; height:13px; border-radius:50%;
+    background:var(--cream);
+    box-shadow:0 1px 5px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.15);
+    transform:translate(-50%,-50%);
+    transition:transform .1s ease, width .1s ease, height .1s ease;
+    touch-action:none;
+  }
+  .progress-handle.dragging{
+    transform:translate(-50%,-50%) scale(1.4);
+    background:var(--amber);
   }
   .time{font-size:10px; opacity:.6; font-variant-numeric:tabular-nums;}
   .controls{display:flex; align-items:center; gap:6px; flex-shrink:0;}
@@ -238,6 +252,7 @@
       <div class="progress-row">
         <div class="progress-track" id="progress-track">
           <div class="progress-fill" id="progress-fill"></div>
+          <div class="progress-handle" id="progress-handle"></div>
         </div>
         <span class="time" id="time-label">0:00 / 0:00</span>
       </div>
@@ -406,12 +421,16 @@ function updateTrackMeta(){
   }catch(e){}
 }
 
+let isSeeking = false;
+
 function updateProgress(){
+  if(isSeeking) return; // don't fight the user's drag with live playback position
   if(!ytPlayer || !ytPlayer.getCurrentTime) return;
   const cur = ytPlayer.getCurrentTime();
   const dur = ytPlayer.getDuration();
   const pct = dur ? (cur/dur)*100 : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-handle').style.left = pct + '%';
   document.getElementById('time-label').textContent = `${fmtTime(cur)} / ${fmtTime(dur)}`;
 }
 
@@ -436,12 +455,54 @@ document.getElementById('thumb').onclick = () => document.getElementById('play-b
   });
 })();
 
-document.getElementById('progress-track').onclick = (e) => {
-  if(!ytPlayer || !ytPlayer.getDuration) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pct = (e.clientX - rect.left) / rect.width;
-  ytPlayer.seekTo(pct * ytPlayer.getDuration(), true);
-};
+/* ---------------- Draggable seek (progress bar + handle) ---------------- */
+(function(){
+  const track = document.getElementById('progress-track');
+  const fill = document.getElementById('progress-fill');
+  const handle = document.getElementById('progress-handle');
+  const timeLabel = document.getElementById('time-label');
+
+  function pctFromEvent(e){
+    const rect = track.getBoundingClientRect();
+    const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+    return rect.width ? x / rect.width : 0;
+  }
+
+  function applyVisual(pct){
+    const p = pct * 100;
+    fill.style.width = p + '%';
+    handle.style.left = p + '%';
+    if(ytPlayer && ytPlayer.getDuration){
+      const dur = ytPlayer.getDuration();
+      timeLabel.textContent = `${fmtTime(pct * dur)} / ${fmtTime(dur)}`;
+    }
+  }
+
+  track.addEventListener('pointerdown', (e) => {
+    if(!ytPlayer || !ytPlayer.getDuration) return;
+    isSeeking = true;
+    handle.classList.add('dragging');
+    track.setPointerCapture(e.pointerId);
+    applyVisual(pctFromEvent(e));
+  });
+
+  track.addEventListener('pointermove', (e) => {
+    if(!isSeeking) return;
+    applyVisual(pctFromEvent(e));
+  });
+
+  function endSeek(e){
+    if(!isSeeking) return;
+    isSeeking = false;
+    handle.classList.remove('dragging');
+    const pct = pctFromEvent(e);
+    if(ytPlayer && ytPlayer.getDuration){
+      ytPlayer.seekTo(pct * ytPlayer.getDuration(), true);
+    }
+  }
+  track.addEventListener('pointerup', endSeek);
+  track.addEventListener('pointercancel', endSeek);
+})();
 
 loadYT();
 </script>
