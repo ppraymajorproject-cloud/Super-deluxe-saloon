@@ -199,7 +199,6 @@
   </div>
 
   <div class="status-msg" id="status-msg"></div>
-  <div class="status-msg" id="presence-debug" style="bottom:70px; opacity:.5;"></div>
 
   <div class="player">
     <div class="thumb" id="thumb"></div>
@@ -288,13 +287,9 @@ async function heartbeat(){
     const raw = results && results[2] ? results[2].result : undefined;
     const count = Number(raw);
     document.getElementById('online-count').textContent = isNaN(count) ? 1 : count;
-    // TEMP DEBUG — dedicated element, won't get cleared by the YT player status
-    document.getElementById('presence-debug').textContent =
-      'id:' + CLIENT_ID + ' raw:' + JSON.stringify(results);
   }catch(e){
     console.error('Presence heartbeat failed:', e);
     document.getElementById('online-count').textContent = '1';
-    document.getElementById('presence-debug').textContent = 'Debug error: ' + e.message;
   }
 }
 heartbeat();
