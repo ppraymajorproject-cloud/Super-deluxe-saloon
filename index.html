@@ -199,6 +199,7 @@
   </div>
 
   <div class="status-msg" id="status-msg"></div>
+  <div class="status-msg" id="presence-debug" style="bottom:70px; opacity:.5;"></div>
 
   <div class="player">
     <div class="thumb" id="thumb"></div>
@@ -238,7 +239,7 @@ const PLAYLIST_ID = "PLDfWs4LxMSoI";
 /* Upstash Redis REST credentials — get these from your Upstash console
    (Database > REST API section). Free tier is plenty for this. */
 const UPSTASH_URL   = "https://up-humpback-190478.upstash.io";
-const UPSTASH_TOKEN = "ggAAAAAAAugOAAIgcDKw6EVqK4TMaH3-qI4zNMi2peUIa3klZw8YJB8X7534Jg";
+const UPSTASH_TOKEN = "gQAAAAAAAugOAAIgcDIzYjgxMDZiMTMxYTY0YmJmOWI3YTQ0OGRiODhmZjcxMw";
 
 /* ---------------- Clock ---------------- */
 function tickClock(){
@@ -287,12 +288,13 @@ async function heartbeat(){
     const raw = results && results[2] ? results[2].result : undefined;
     const count = Number(raw);
     document.getElementById('online-count').textContent = isNaN(count) ? 1 : count;
-    // TEMP DEBUG — remove once counter is confirmed working
-    document.getElementById('status-msg').textContent = 'Debug raw: ' + JSON.stringify(results);
+    // TEMP DEBUG — dedicated element, won't get cleared by the YT player status
+    document.getElementById('presence-debug').textContent =
+      'id:' + CLIENT_ID + ' raw:' + JSON.stringify(results);
   }catch(e){
     console.error('Presence heartbeat failed:', e);
     document.getElementById('online-count').textContent = '1';
-    document.getElementById('status-msg').textContent = 'Debug: ' + e.message;
+    document.getElementById('presence-debug').textContent = 'Debug error: ' + e.message;
   }
 }
 heartbeat();
