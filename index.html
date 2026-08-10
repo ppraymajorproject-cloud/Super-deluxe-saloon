@@ -139,7 +139,14 @@
   }
   .thumb{
     width:52px; height:52px; border-radius:50%;
-    background:#222 center/cover no-repeat;
+    background-color:#222;
+    background-image:none;
+    background-position:center;
+    background-size:cover;
+    background-repeat:no-repeat;
+    background-origin:border-box;
+    background-clip:border-box;
+    overflow:hidden;
     flex-shrink:0;
     box-shadow:0 2px 8px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.25);
     border:1px solid rgba(255,255,255,0.15);
@@ -416,7 +423,7 @@ function updateTrackMeta(){
     document.getElementById('track-artist').textContent = data.author || 'Deluxe Saloon Radio';
     if(data.video_id){
       document.getElementById('thumb').style.backgroundImage =
-        `url(https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg)`;
+        `url(https://img.youtube.com/vi/${data.video_id}/mqdefault.jpg)`;
     }
   }catch(e){}
 }
