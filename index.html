@@ -237,8 +237,8 @@ const PLAYLIST_ID = "PLDfWs4LxMSoI";
 
 /* Upstash Redis REST credentials — get these from your Upstash console
    (Database > REST API section). Free tier is plenty for this. */
-const UPSTASH_URL   = "REPLACE_WITH_YOUR_UPSTASH_REST_URL";   // e.g. https://us1-xxxx.upstash.io
-const UPSTASH_TOKEN = "REPLACE_WITH_YOUR_UPSTASH_REST_TOKEN";
+const UPSTASH_URL   = "https://up-humpback-190478.upstash.io";
+const UPSTASH_TOKEN = "ggAAAAAAAugOAAIgcDKw6EVqK4TMaH3-qI4zNMi2peUIa3klZw8YJB8X7534Jg";
 
 /* ---------------- Clock ---------------- */
 function tickClock(){
@@ -265,7 +265,10 @@ async function upstashPipeline(commands){
     },
     body: JSON.stringify(commands)
   });
-  if(!res.ok) throw new Error('Upstash request failed');
+  if(!res.ok){
+    const bodyText = await res.text().catch(() => '');
+    throw new Error(`Upstash ${res.status}: ${bodyText.slice(0,150)}`);
+  }
   return res.json();
 }
 
@@ -284,8 +287,11 @@ async function heartbeat(){
     const count = results && results[2] && typeof results[2].result === 'number'
       ? results[2].result : 1;
     document.getElementById('online-count').textContent = count;
+    document.getElementById('status-msg').textContent = '';
   }catch(e){
+    console.error('Presence heartbeat failed:', e);
     document.getElementById('online-count').textContent = '1';
+    document.getElementById('status-msg').textContent = 'Debug: ' + e.message;
   }
 }
 heartbeat();
