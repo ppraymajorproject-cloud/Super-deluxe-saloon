@@ -149,24 +149,34 @@
 
 
 
-  .thumb{
-    width:80px; height:80px;max-width: 90%; border-radius:50%;
-    background-color:#222;
-    background-image:none;
-    background-position:center;
-    background-size:cover;
-    background-repeat:no-repeat;
-    background-origin:border-box;
-    background-clip:border-box;
-    overflow:hidden;
-    flex-shrink:0;
-    box-shadow:0 2px 8px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.25);
-    border:1px solid rgba(255,255,255,0.15);
-    animation:spin 12s linear infinite;
-    animation-play-state:paused;
-    transition:transform .12s ease;
-    cursor:pointer;
-  }
+  .thumb {
+  height: 70%;
+  aspect-ratio: 1 / 1;
+  width: auto;
+
+  flex: 0 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+
+  background-color: #222;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(255,255,255,0.15);
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.35),
+    inset 0 0 0 1px rgba(255,255,255,.25);
+
+  animation: spin 12s linear infinite;
+  animation-play-state: paused;
+
+  transition: transform .12s ease;
+  cursor: pointer;
+}
   .thumb:active, .thumb.pressed{ transform:scale(0.92); }
   .thumb.playing{animation-play-state:running;}
   @keyframes spin{from{transform:rotate(0)} to{transform:rotate(360deg)}}
